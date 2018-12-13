@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 
-public class DraggableNode : EditorWindow
+public class DraggableNode : EditorWindow, SelectableItem
 {
     public static float DRAGGABLE_NODE_DEFAULT_WIDTH = 40.0f;
     public static float DRAGGABLE_NODE_DEFAULT_HEIGHT = 20.0f;

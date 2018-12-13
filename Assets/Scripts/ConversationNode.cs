@@ -2,8 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
+using System.IO;
 
-public class ConversationNode : DraggableNode {
+[System.Serializable]
+public class ConversationNode : DraggableNode
+{
 
     List<KeyValuePair<KeyWord, ConversationNode>> daOutcomes;
 

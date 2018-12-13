@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
-
+using System.IO;
+using System.Text;
 
 
 public class ConversationTreeEditor : EditorWindow
@@ -142,5 +143,15 @@ public class ConversationTreeEditor : EditorWindow
             if (bIsUsed)
                 e.Use();  //Eat the event so it doesn't propagate through the editor.
         }
+    }
+
+    public void SaveToJSON()
+    {
+        string json = JsonUtility.ToJson(daNodes);
+
+        string destination = "Assets/Export/TreeNodes.json";
+        FileStream file = new FileStream(destination, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
+        byte[] data = Encoding.ASCII.GetBytes(json);
+        file.Write(data, 0, data.Length);
     }
 }
