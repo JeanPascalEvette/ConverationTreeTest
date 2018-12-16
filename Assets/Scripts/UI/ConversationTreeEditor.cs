@@ -5,31 +5,24 @@ using UnityEditor;
 using System.IO;
 using System.Text;
 
-
+[InitializeOnLoad]
 public class ConversationTreeEditor : EditorWindow
 {
-    private static ConversationTreeEditor instance;
+    private static ConversationTreeEditor _instance;
+
+    public static ConversationTreeEditor Instance { get { return _instance; } }
     
-    // Explicit static constructor to tell C# compiler
-    // not to mark type as beforefieldinit
     static ConversationTreeEditor()
     {
-    }
-
-    public static ConversationTreeEditor Instance
-    {
-        get
-        {
-            return instance;
-        }
+        EditorApplication.update += Update;
     }
 
     List<ConversationNode> daNodes;
     Vector2 vNodesPosOffset;
     bool bIsScrollingOffset;
-    bool bIsLinking;
     LeftMenu menu;
     ConversationNode nodeCurrentlyLinked;
+    ConversationNode nodeCurrentlySelected;
 
     [MenuItem("Window/ConversationTreeEditor")]
     public static void ShowWindow()
@@ -37,121 +30,230 @@ public class ConversationTreeEditor : EditorWindow
         EditorWindow.GetWindow(typeof(ConversationTreeEditor));
     }
 
-    private void InitSingleton() 
+    static void Update()
     {
-        instance = ScriptableObject.CreateInstance<ConversationTreeEditor>();
-        instance.daNodes = new List<ConversationNode>();
-        instance.menu = ScriptableObject.CreateInstance<LeftMenu>();
-        nodeCurrentlyLinked = null;
+        if (!_instance)
+        {
+            _instance = ScriptableObject.CreateInstance<ConversationTreeEditor>();
+            _instance.daNodes = new List<ConversationNode>();
+            _instance.menu = ScriptableObject.CreateInstance<LeftMenu>();
+            _instance.nodeCurrentlyLinked = null;
+            _instance.nodeCurrentlySelected = null;
 
-        vNodesPosOffset = Vector2.zero;
-        bIsScrollingOffset = false;
-        bIsLinking = false;
-        Vector2 vStart = new Vector2(LeftMenu.LEFT_MENU_WIDTH, 0);
-        Vector2 vSize = new Vector2(DraggableNode.DRAGGABLE_NODE_DEFAULT_WIDTH, DraggableNode.DRAGGABLE_NODE_DEFAULT_HEIGHT);
-        ConversationNode newNode = ScriptableObject.CreateInstance<ConversationNode>();
-        newNode.Init("TEST1", vStart, vSize);
-        instance.daNodes.Add(newNode);
-        vStart = new Vector2(LeftMenu.LEFT_MENU_WIDTH + 60.0f, 60.0f);
-        newNode = ScriptableObject.CreateInstance<ConversationNode>();
-        newNode.Init("TEST2", vStart, vSize);
-        instance.daNodes.Add(newNode);
-        vStart = new Vector2(LeftMenu.LEFT_MENU_WIDTH + 180.0f, 180.0f);
-        newNode = ScriptableObject.CreateInstance<ConversationNode>();
-        newNode.Init("TEST3", vStart, vSize);
-        instance.daNodes.Add(newNode);
+            _instance.vNodesPosOffset = Vector2.zero; 
+            _instance.bIsScrollingOffset = false;
+            _instance.LoadFromJSON();
+        }
     }
 
     void OnGUI()
     {
-        if (!instance)
-            InitSingleton(); 
+        if (!_instance) 
+            return;
 
-        if (instance)
-        {
-            foreach (DraggableNode Node in instance.daNodes)
-            {
-                Node.DrawBackground(vNodesPosOffset);
-            }
-            instance.menu.Draw();
-            foreach (DraggableNode Node in instance.daNodes)
-            {
-                Node.Draw(vNodesPosOffset);
-            }
-        }
+        _instance.HandleInputs();
+        _instance.HandleUpdate();
+        _instance.HandleRender();
+    }
 
+    void HandleInputs()
+    {
+        bool bIsUsed = false;
         Event e = Event.current;
-        if(e.type == EventType.KeyDown)
-        {
-            if(e.keyCode == KeyCode.E)
-            {
-                bIsLinking = true;
-            }
-        }
-        else if (e.type == EventType.KeyUp)
-        {
-            if (e.keyCode == KeyCode.E)
-            {
-                bIsLinking = false;
-            }
-        }
-        else if (e.type != EventType.Layout && e.type != EventType.Repaint)
-        {
-            bool bIsUsed = false;
-            if (bIsLinking && e.button == 0)
-            {
-                foreach (ConversationNode Node in instance.daNodes)
-                {
-                    if (Node.IsPosWithin(e.mousePosition - vNodesPosOffset))
-                    {
-                        if (e.type == EventType.MouseDown)
-                            nodeCurrentlyLinked = Node;
-                        if (e.type == EventType.MouseUp && nodeCurrentlyLinked != null)
-                        {
-                            nodeCurrentlyLinked.LinkTo(new KeyWord(""), Node);
-                            nodeCurrentlyLinked = null;
-                            bIsUsed = true;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                foreach (ConversationNode Node in instance.daNodes)
-                {
-                    if ((Node.IsBeingDragged() && (e.type == EventType.MouseDrag || e.type == EventType.MouseUp)) ||
-                        (Node.IsPosWithin(e.mousePosition - vNodesPosOffset) && e.button == 0))
-                    {
-                        bIsUsed = true;
-                        Node.HandleMouseEvents(e, vNodesPosOffset);
-                    }
-                }
+        if (e.type == EventType.Layout || e.type == EventType.Repaint)
+            return;
 
-                if (e.button == 2)
+        if (e.keyCode == KeyCode.E)
+        {
+            bool bFoundNode = false;
+            foreach (ConversationNode Node in _instance.daNodes)
+            {
+                if (Node.IsPosWithin(e.mousePosition - GetNodesOffset()))
                 {
-                    if (e.type == EventType.MouseDown)
-                        bIsScrollingOffset = true;
-                    if (e.type == EventType.MouseUp)
-                        bIsScrollingOffset = false;
-                    if (bIsScrollingOffset && e.type == EventType.MouseDrag)
+                    bFoundNode = true;
+                    if (e.type == EventType.KeyDown && nodeCurrentlyLinked == null)
                     {
+                        nodeCurrentlyLinked = Node;
+                        break;
+                    }
+                    if (e.type == EventType.KeyUp && nodeCurrentlyLinked != null)
+                    {
+                        nodeCurrentlyLinked.LinkTo(new NodeLink("", Node));
+                        nodeCurrentlyLinked = null;
                         bIsUsed = true;
-                        vNodesPosOffset += e.delta;
+                        break;
                     }
                 }
             }
-            if (bIsUsed)
-                e.Use();  //Eat the event so it doesn't propagate through the editor.
+            if(!bFoundNode && e.type == EventType.KeyUp && nodeCurrentlyLinked != null)
+            {
+                nodeCurrentlyLinked = null;
+                bIsUsed = true;
+            }
         }
+        else
+        {
+            if (e.type == EventType.MouseDown)
+            {
+                GUI.FocusControl(null);
+                if (nodeCurrentlySelected)
+                    nodeCurrentlySelected.SetSelected(false);
+            }
+            foreach (ConversationNode Node in _instance.daNodes)
+            {
+                if(Node.IsPosWithin(e.mousePosition - GetNodesOffset()) && e.button == 0 && e.type == EventType.MouseDown)
+                {
+                    nodeCurrentlySelected = Node;
+                    nodeCurrentlySelected.SetSelected(true);
+
+                }
+                if ((Node.IsBeingDragged() && (e.type == EventType.MouseDrag || e.type == EventType.MouseUp)) ||
+                    (Node.IsPosWithin(e.mousePosition - GetNodesOffset()) && e.button == 0))
+                {
+                    bIsUsed = true;
+                    Node.HandleMouseEvents(e, vNodesPosOffset);
+                    break;
+                }
+            }
+
+
+            if (e.button == 2)
+            {
+                if (e.type == EventType.MouseDown)
+                    bIsScrollingOffset = true;
+                if (e.type == EventType.MouseUp)
+                    bIsScrollingOffset = false;
+                if (bIsScrollingOffset && e.type == EventType.MouseDrag)
+                {
+                    bIsUsed = true;
+                    vNodesPosOffset += e.delta;
+                }
+            }
+        }
+
+        if (bIsUsed)
+            e.Use();  //Eat the event so it doesn't propagate through the editor.
+    }
+
+    void HandleUpdate()
+    {
+
+    }
+
+    void HandleRender()
+    {
+        if (_instance)
+        {
+            Handles.BeginGUI();
+            foreach (DraggableNode Node in _instance.daNodes)
+            {
+                Node.DrawBackground(GetNodesOffset());
+            }
+            foreach (DraggableNode Node in _instance.daNodes)
+            {
+                Node.Draw(GetNodesOffset());
+            }
+            _instance.menu.Draw();
+            if (nodeCurrentlyLinked != null)
+            {
+                Vector2 vP1 = GetNodesOffset() + nodeCurrentlyLinked.vPosStart + nodeCurrentlyLinked.vSize * 0.5f;
+                Vector2 vP2 = Event.current.mousePosition;
+                Handles.color = Color.magenta;
+                Handles.DrawLine(vP1, vP2);
+            }
+            Handles.EndGUI();
+        }
+        UnityEditor.HandleUtility.Repaint();
     }
 
     public void SaveToJSON()
     {
-        string json = JsonUtility.ToJson(daNodes);
+        Node[] daJsonNodes = new Node[daNodes.Count];
+        for(int i = 0; i < daNodes.Count; i++)
+        {
+            Node n = new Node();
+            n.sName = daNodes[i].sName;
+            n.vPosStart = daNodes[i].vPosStart;
+            n.iID = daNodes[i].iID;
+            foreach(NodeLink link in daNodes[i].daOutcomes)
+            {
+                n.daOutcomes.Add(new Link(link.sWord, link.node.iID));
+            }
+            daJsonNodes[i] = n;
+        }
+
+        string json = JsonHelper.ToJson(daJsonNodes, true);
 
         string destination = "Assets/Export/TreeNodes.json";
         FileStream file = new FileStream(destination, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
         byte[] data = Encoding.ASCII.GetBytes(json);
         file.Write(data, 0, data.Length);
+        file.Close();
+    }
+
+    public void LoadFromJSON()
+    {
+        string source = "Assets/Export/TreeNodes.json";  
+        FileStream file = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.None);
+        byte[] data = new byte[file.Length];
+        file.Read(data, 0, data.Length);
+        file.Close();
+
+        string sJson = Encoding.ASCII.GetString(data);
+        Node[] daJsonNodes = JsonHelper.FromJson<Node>(sJson);
+
+        daNodes.Clear();
+        uint iHighestID = 0;
+        for (int i = 0; i < daJsonNodes.Length; i++)
+        {
+            ConversationNode n = ScriptableObject.CreateInstance<ConversationNode>();
+            n.Init(daJsonNodes[i].sName, daJsonNodes[i].vPosStart);
+            n.iID = daJsonNodes[i].iID;
+            iHighestID = (iHighestID > n.iID) ? iHighestID : n.iID;
+            daNodes.Add(n);
+        }
+         
+        DraggableNode.iIDCount = iHighestID + 1;
+
+        for (int i = 0; i < daJsonNodes.Length; i++)
+        {
+            foreach (Link link in daJsonNodes[i].daOutcomes)
+            {
+                for (int u = 0; u < daNodes.Count; u++)
+                {
+                    if (link.iID == daNodes[u].iID)
+                    {
+                        daNodes[i].daOutcomes.Add(new NodeLink(link.sWord, daNodes[u]));
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    private Vector2 GetNodesOffset()
+    {
+        return vNodesPosOffset + new Vector2(LeftMenu.LEFT_MENU_WIDTH, 0.0f);
+    }
+
+    public void AddNode()
+    {
+        ConversationNode n = ScriptableObject.CreateInstance<ConversationNode>();
+        n.sName = "";
+        n.vPosStart = -vNodesPosOffset;
+        daNodes.Add(n);
+    }
+
+    public void RemoveNode()
+    {
+        if(nodeCurrentlySelected)
+        {
+            daNodes.Remove(nodeCurrentlySelected);
+        }
+    }
+
+    public ConversationNode GetSelectedNode()
+    {
+        return nodeCurrentlySelected;
     }
 }

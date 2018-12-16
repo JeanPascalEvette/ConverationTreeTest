@@ -1,1 +1,36 @@
-{}
+{
+    "Items": [
+        {
+            "iID": 126,
+            "sName": "TEST1",
+            "vPosStart": {
+                "x": 300.0,
+                "y": 0.0
+            },
+            "daOutcomes": []
+        },
+        {
+            "iID": 127,
+            "sName": "TEST2",
+            "vPosStart": {
+                "x": 615.0,
+                "y": 56.0
+            },
+            "daOutcomes": [
+                {
+                    "sWord": "",
+                    "iID": 128
+                }
+            ]
+        },
+        {
+            "iID": 128,
+            "sName": "TEST3",
+            "vPosStart": {
+                "x": 480.0,
+                "y": 180.0
+            },
+            "daOutcomes": []
+        }
+    ]
+}
