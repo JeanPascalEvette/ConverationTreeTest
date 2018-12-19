@@ -9,11 +9,19 @@ public class ConversationNode : DraggableNode
     private static float ARROW_BRANCH_DISTANCE_FROM_MAIN = 10.0f;
     private static float ARROW_BRANCH_DISTANCE_FROM_END = 30.0f;
 
+    public string sText;
     public List<NodeLink> daOutcomes;
 
     public ConversationNode()
     {
         daOutcomes = new List<NodeLink>();
+    }
+
+    public void Init(string _sName, string _sText, Vector2 _vPosStart)
+    {
+        base.Init(_sName, _vPosStart);
+
+        sText = _sText;
     }
 
     public void LinkTo(NodeLink _link)
@@ -29,7 +37,7 @@ public class ConversationNode : DraggableNode
         {
             Vector2 vP1 = _vNodeOffset + vPosStart + vSize * 0.5f;
             Vector2 vP2 = _vNodeOffset + link.node.vPosStart + vSize * 0.5f;
-            if(link.sWord.Length > 0)
+            if(link.daKeywords.Count > 0)
                 Handles.color = Color.white;
             else
                 Handles.color = Color.magenta;

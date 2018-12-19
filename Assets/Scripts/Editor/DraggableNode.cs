@@ -26,7 +26,7 @@ public class DraggableNode : EditorWindow
         bIsSelected = false;
     }
 
-    public void Init(string _sName, Vector2 _vPosStart)
+    public virtual void Init(string _sName, Vector2 _vPosStart)
     {
         sName = _sName;
         vPosStart = _vPosStart;

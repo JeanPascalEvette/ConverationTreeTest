@@ -78,7 +78,7 @@ public class ConversationTreeEditor : EditorWindow
                     }
                     if (e.type == EventType.KeyUp && nodeCurrentlyLinked != null)
                     {
-                        nodeCurrentlyLinked.LinkTo(new NodeLink("", Node));
+                        nodeCurrentlyLinked.LinkTo(new NodeLink(new List<string> { }, Node));
                         nodeCurrentlyLinked = null;
                         bIsUsed = true;
                         break;
@@ -173,11 +173,12 @@ public class ConversationTreeEditor : EditorWindow
         {
             Node n = new Node();
             n.sName = daNodes[i].sName;
+            n.sText = daNodes[i].sText;
             n.vPosStart = daNodes[i].vPosStart;
             n.iID = daNodes[i].iID;
             foreach(NodeLink link in daNodes[i].daOutcomes)
             {
-                n.daOutcomes.Add(new Link(link.sWord, link.node.iID));
+                n.daOutcomes.Add(new Link(link.daKeywords.ToArray(), link.node.iID));
             }
             daJsonNodes[i] = n;
         }
@@ -193,38 +194,41 @@ public class ConversationTreeEditor : EditorWindow
 
     public void LoadFromJSON()
     {
-        string source = "Assets/Export/TreeNodes.json";  
-        FileStream file = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.None);
-        byte[] data = new byte[file.Length];
-        file.Read(data, 0, data.Length);
-        file.Close();
-
-        string sJson = Encoding.ASCII.GetString(data);
-        Node[] daJsonNodes = JsonHelper.FromJson<Node>(sJson);
-
-        daNodes.Clear();
-        uint iHighestID = 0;
-        for (int i = 0; i < daJsonNodes.Length; i++)
+        string source = "Assets/Export/TreeNodes.json";
+        using (StreamReader streamReader = File.OpenText(source))
         {
-            ConversationNode n = ScriptableObject.CreateInstance<ConversationNode>();
-            n.Init(daJsonNodes[i].sName, daJsonNodes[i].vPosStart);
-            n.iID = daJsonNodes[i].iID;
-            iHighestID = (iHighestID > n.iID) ? iHighestID : n.iID;
-            daNodes.Add(n);
-        }
-         
-        DraggableNode.iIDCount = iHighestID + 1;
+            string jsonString = streamReader.ReadToEnd();
+            Node[] daJsonNodes = JsonHelper.FromJson<Node>(jsonString);
 
-        for (int i = 0; i < daJsonNodes.Length; i++)
-        {
-            foreach (Link link in daJsonNodes[i].daOutcomes)
+            daNodes.Clear();
+            uint iHighestID = 0;
+            for (int i = 0; i < daJsonNodes.Length; i++)
             {
-                for (int u = 0; u < daNodes.Count; u++)
+                ConversationNode n = ScriptableObject.CreateInstance<ConversationNode>();
+                n.Init(daJsonNodes[i].sName, daJsonNodes[i].sText, daJsonNodes[i].vPosStart);
+                n.iID = daJsonNodes[i].iID;
+                iHighestID = (iHighestID > n.iID) ? iHighestID : n.iID;
+                daNodes.Add(n);
+            }
+
+            DraggableNode.iIDCount = iHighestID + 1;
+
+            List<string> daKeyWords;
+            for (int i = 0; i < daJsonNodes.Length; i++)
+            {
+                foreach (Link link in daJsonNodes[i].daOutcomes)
                 {
-                    if (link.iID == daNodes[u].iID)
+                    for (int u = 0; u < daNodes.Count; u++)
                     {
-                        daNodes[i].daOutcomes.Add(new NodeLink(link.sWord, daNodes[u]));
-                        break;
+                        if (link.iID == daNodes[u].iID)
+                        {
+                            if (link.daKeywords != null)
+                                daKeyWords = new List<string>(link.daKeywords);
+                            else
+                                daKeyWords = new List<string> { };
+                            daNodes[i].daOutcomes.Add(new NodeLink(daKeyWords, daNodes[u]));
+                            break;
+                        }
                     }
                 }
             }

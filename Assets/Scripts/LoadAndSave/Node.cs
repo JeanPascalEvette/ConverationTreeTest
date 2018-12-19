@@ -7,6 +7,7 @@ public class Node {
 
     public uint iID;
     public string sName;
+    public string sText;
     public Vector2 vPosStart;
     public List<Link> daOutcomes;
 
