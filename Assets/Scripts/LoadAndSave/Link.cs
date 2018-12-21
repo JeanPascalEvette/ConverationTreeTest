@@ -7,7 +7,7 @@ public class Link {
 
     [SerializeField] public string[] daKeywords;
     [SerializeField] public uint iID;
-    private Node cNode; // Not used in Json
+    [System.NonSerialized] public Node cNode;
     
     public Link(string[] _daKeywords, uint _iID)
     {

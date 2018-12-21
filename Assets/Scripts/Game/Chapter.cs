@@ -32,7 +32,18 @@ public class Chapter {
                 if(daListOfNodes[i].iID == _cProfile.uNodeID)
                 {
                     cCurrentNode = daListOfNodes[i];
-                    break;
+                }
+
+                for (int u = 0; u < daListOfNodes[i].daOutcomes.Count; u++)
+                {
+                    for (int i2 = 0; i2 < daListOfNodes.Length; i2++)
+                    {
+                        if(daListOfNodes[i2].iID == daListOfNodes[i].daOutcomes[u].iID)
+                        {
+                            daListOfNodes[i].daOutcomes[u].cNode = daListOfNodes[i2];
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -44,5 +55,34 @@ public class Chapter {
     public Node GetCurrentNode()
     {
         return cCurrentNode;
+    }
+
+    public int ValidateString(string _sText)
+    {
+        int keyWordsToValidate = 0;
+        for (int i = 0; i < cCurrentNode.daOutcomes.Count; i++)
+        {
+            keyWordsToValidate = cCurrentNode.daOutcomes[i].daKeywords.Length;
+            for (int u = 0; u < cCurrentNode.daOutcomes[i].daKeywords.Length; u++)
+            {
+                if (_sText.Contains(cCurrentNode.daOutcomes[i].daKeywords[u]))
+                {
+                    keyWordsToValidate--;
+                }
+            }
+            if (keyWordsToValidate <= 0)
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    public void ChooseOutcome(int _iIdx)
+    {
+        if (_iIdx < 0 || _iIdx >= cCurrentNode.daOutcomes.Count)
+            return;
+
+        cCurrentNode = cCurrentNode.daOutcomes[_iIdx].cNode;
     }
 }

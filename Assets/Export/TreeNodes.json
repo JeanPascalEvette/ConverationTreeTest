@@ -8,12 +8,19 @@
                 "x": 254.0,
                 "y": 325.0
             },
-            "daOutcomes": []
+            "daOutcomes": [
+                {
+                    "daKeywords": [
+                        "1234"
+                    ],
+                    "iID": 127
+                }
+            ]
         },
         {
             "iID": 127,
             "sName": "TEST2",
-            "sText": "",
+            "sText": "test 2nd slide",
             "vPosStart": {
                 "x": 615.0,
                 "y": 56.0
@@ -32,10 +39,10 @@
         {
             "iID": 128,
             "sName": "TEST3",
-            "sText": "",
+            "sText": "3rd slide yeee",
             "vPosStart": {
-                "x": 480.0,
-                "y": 180.0
+                "x": 652.0,
+                "y": 241.0
             },
             "daOutcomes": []
         }

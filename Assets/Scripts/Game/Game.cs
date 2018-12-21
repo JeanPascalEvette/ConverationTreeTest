@@ -10,6 +10,12 @@ public class Game : MonoBehaviour {
     private Profile cCurrentProfile = null;
     private Chapter cCurrentChapter = null;
 
+    public Text cTxtPrompt;
+    public InputField cTextInput;
+
+    public Sprite incorrectInputGraphic;
+    public Sprite correctInputGraphic;
+
     private void Awake()
     {
         if (instance == null)
@@ -40,18 +46,43 @@ public class Game : MonoBehaviour {
 
         cCurrentChapter = new Chapter(cCurrentProfile);
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (!cTextInput.isFocused)
+            cTextInput.ActivateInputField();
+
+        if(cCurrentChapter != null)
+        {
+            if (Input.anyKeyDown)
+            {
+                int iOutcomeIdx = cCurrentChapter.ValidateString(cTextInput.text);
+                if (iOutcomeIdx >= 0)
+                {
+                    cTextInput.image.sprite = correctInputGraphic;
+                }
+                else
+                {
+                    cTextInput.image.sprite = incorrectInputGraphic;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Return))
+                {
+                    cCurrentChapter.ChooseOutcome(iOutcomeIdx);
+                    cTextInput.text = "";
+                    cTextInput.image.sprite = incorrectInputGraphic;
+                }
+            }
+
+        }
     }
 
     public void OnGUI()
     {
         if (cCurrentChapter != null)
         {
-            GameObject cGOPrompt = GameObject.Find("/GameScene/Prompt");
-            Text cTxtPrompt = cGOPrompt.GetComponent<Text>();
-            cTxtPrompt.text = cCurrentChapter.GetCurrentNode().sName;
+            cTxtPrompt.text = cCurrentChapter.GetCurrentNode().sText;
         }
     }
 }
