@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
+using System.Text.RegularExpressions;
 
 public class Chapter {
 
@@ -36,6 +37,16 @@ public class Chapter {
 
                 for (int u = 0; u < daListOfNodes[i].daOutcomes.Count; u++)
                 {
+                    // Convert Keywords to fit Regex format
+                    for (int v = 0; v < daListOfNodes[i].daOutcomes[u].daKeywords.Length; v++)
+                    {
+                        daListOfNodes[i].daOutcomes[u].daKeywords[v] = daListOfNodes[i].daOutcomes[u].daKeywords[v].Replace("(", "\\(");
+                        daListOfNodes[i].daOutcomes[u].daKeywords[v] = daListOfNodes[i].daOutcomes[u].daKeywords[v].Replace(")", "\\)");
+                        daListOfNodes[i].daOutcomes[u].daKeywords[v] = daListOfNodes[i].daOutcomes[u].daKeywords[v].Replace("[", "(");
+                        daListOfNodes[i].daOutcomes[u].daKeywords[v] = daListOfNodes[i].daOutcomes[u].daKeywords[v].Replace("]", ")");
+                    }
+
+                    //Link nodes towards other nodes based on ID
                     for (int i2 = 0; i2 < daListOfNodes.Length; i2++)
                     {
                         if(daListOfNodes[i2].iID == daListOfNodes[i].daOutcomes[u].iID)
@@ -65,7 +76,8 @@ public class Chapter {
             keyWordsToValidate = cCurrentNode.daOutcomes[i].daKeywords.Length;
             for (int u = 0; u < cCurrentNode.daOutcomes[i].daKeywords.Length; u++)
             {
-                if (_sText.Contains(cCurrentNode.daOutcomes[i].daKeywords[u]))
+                Match match = Regex.Match(_sText, @cCurrentNode.daOutcomes[i].daKeywords[u], RegexOptions.IgnoreCase);
+                if (match.Success)
                 {
                     keyWordsToValidate--;
                 }
