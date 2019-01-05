@@ -30,7 +30,9 @@ public class Chapter {
         {
             for(int i = 0; i < daListOfNodes.Length; i++)
             {
-                if(daListOfNodes[i].iID == _cProfile.uNodeID)
+                daListOfNodes[i].Init();
+
+                if (daListOfNodes[i].iID == _cProfile.uNodeID)
                 {
                     cCurrentNode = daListOfNodes[i];
                 }
@@ -61,6 +63,9 @@ public class Chapter {
             if (cCurrentNode == null)
                 cCurrentNode = daListOfNodes[0];
         }
+        
+        if(cCurrentNode.cScript != null)
+            cCurrentNode.cScript.FirstFrameInState();
     }
 
     public Node GetCurrentNode()
@@ -95,6 +100,10 @@ public class Chapter {
         if (_iIdx < 0 || _iIdx >= cCurrentNode.daOutcomes.Count)
             return;
 
+        if (cCurrentNode.cScript != null)
+            cCurrentNode.cScript.LastFrameInState();
         cCurrentNode = cCurrentNode.daOutcomes[_iIdx].cNode;
+        if (cCurrentNode.cScript != null)
+            cCurrentNode.cScript.FirstFrameInState();
     }
 }

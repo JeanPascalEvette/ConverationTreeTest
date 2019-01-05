@@ -69,6 +69,19 @@ public class LeftMenu : EditorWindow
             {
                 fXCurrentPos = 0.0f;
                 fYCurrentPos += NORMAL_LINE_HEIGHT;
+                GUI.Label(new Rect(fXCurrentPos, fYCurrentPos, SMALL_LABEL_WIDTH, NORMAL_LINE_HEIGHT), "Script", styleCentered);
+                fXCurrentPos += SMALL_LABEL_WIDTH;
+                GUI.Label(new Rect(fXCurrentPos, fYCurrentPos, NORMAL_BUTTON_WIDTH, NORMAL_LINE_HEIGHT), selectedNode.sScriptName, styleCentered);
+                fXCurrentPos += NORMAL_BUTTON_WIDTH;
+                if (GUI.Button(new Rect(fXCurrentPos, fYCurrentPos, LEFT_MENU_WIDTH - fXCurrentPos, NORMAL_LINE_HEIGHT), "Edit"))
+                {
+                    PopupWindow.Show(new Rect(fXCurrentPos, fYCurrentPos, LEFT_MENU_WIDTH - fXCurrentPos, NORMAL_LINE_HEIGHT), new EditScriptPopup(selectedNode));
+                }
+            }
+
+            {
+                fXCurrentPos = 0.0f;
+                fYCurrentPos += NORMAL_LINE_HEIGHT;
                 GUI.Label(new Rect(fXCurrentPos, fYCurrentPos, LEFT_MENU_WIDTH, NORMAL_LINE_HEIGHT), "Links", styleCentered);
             }
             for (int i = 0; i < selectedNode.daOutcomes.Count; i++)

@@ -174,6 +174,7 @@ public class ConversationTreeEditor : EditorWindow
             Node n = new Node();
             n.sName = daNodes[i].sName;
             n.sText = daNodes[i].sText;
+            n.sScriptName = daNodes[i].sScriptName;
             n.vPosStart = daNodes[i].vPosStart;
             n.iID = daNodes[i].iID;
             foreach(NodeLink link in daNodes[i].daOutcomes)
@@ -207,6 +208,7 @@ public class ConversationTreeEditor : EditorWindow
                 ConversationNode n = ScriptableObject.CreateInstance<ConversationNode>();
                 n.Init(daJsonNodes[i].sName, daJsonNodes[i].sText, daJsonNodes[i].vPosStart);
                 n.iID = daJsonNodes[i].iID;
+                n.sScriptName = daJsonNodes[i].sScriptName;
                 iHighestID = (iHighestID > n.iID) ? iHighestID : n.iID;
                 daNodes.Add(n);
             }

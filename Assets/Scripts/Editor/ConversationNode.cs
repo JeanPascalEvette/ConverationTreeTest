@@ -11,6 +11,7 @@ public class ConversationNode : DraggableNode
 
     public string sText;
     public List<NodeLink> daOutcomes;
+    public string sScriptName;
 
     public ConversationNode()
     {
@@ -22,6 +23,7 @@ public class ConversationNode : DraggableNode
         base.Init(_sName, _vPosStart);
 
         sText = _sText;
+        sScriptName = "";
     }
 
     public void LinkTo(NodeLink _link)
